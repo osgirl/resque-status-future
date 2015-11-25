@@ -58,7 +58,7 @@ future = CreateContainer.future('image_name' => 'redis').then do |st|
     StartContainer.future('container_name' => st['container_name'])
 end
 
-status = future.wait
+status = future.wait(timeout: 10)
 ```
 
 The callback given to `#then` can be any Ruby code and it receives the
@@ -85,10 +85,19 @@ At any time you can call `future.status` to get back the current status of the
 job, even if it's not completed yet. If the last job in the chain is not yet
 running, this will return `nil`.
 
-## TODO
+## Waiting for multiple futures
 
-Add a `Resque::Plugins::Status::Future.wait()` that allows for waiting for
-multiple futures and gleaning all of their statuses.
+If you have kicked off multiple jobs at once, you can wait for them all with
+the module-level `.wait`:
+
+```ruby
+f1 = CreateContainer.future('image_name' => 'redis')
+f2 = CreateContainer.future('image_name' => 'ruby')
+s1, s2 = Resque::Plugins::Status::Future.wait(f1, f2, timeout: 10)
+```
+
+The statuses are returned in the same order as the futures were passed in,
+not the order in which they completed.
 
 ## Authors
 

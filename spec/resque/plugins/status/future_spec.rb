@@ -54,6 +54,30 @@ describe Resque::Plugins::Status::Future do
             expect(s1['finish_time']).to be > s2['finish_time']
         end
     end
+    
+    describe '.wait' do
+        it 'waits for multiple futures and returns all their statuses' do
+            f1 = Example.future(arg1: "one")
+            f2 = Example.future(arg1: "two")
+            f3 = Example.future(arg1: "three")
+            ret1, ret2, ret3 = Resque::Plugins::Status::Future.wait(f1, f2, f3)
+            expect(ret1['example']).to eq("oneone")
+            expect(ret2['example']).to eq("twotwo")
+            expect(ret3['example']).to eq("threethree")
+        end
+        it 'supports chaining with #then' do
+            f1 = Example.future(arg1: "one").then{|st| Example.future(arg1: "1#{st['example']}")}
+            f2 = Example.future(arg1: "two").then{|st| Example.future(arg1: "2#{st['example']}")}
+            ret1, ret2 = Resque::Plugins::Status::Future.wait(f1, f2)
+            expect(ret1['example']).to eq("1oneone1oneone")
+            expect(ret2['example']).to eq("2twotwo2twotwo")
+        end
+        it 'still has options' do
+            f1 = SlowExample.future(arg1: "one")
+            f2 = SlowExample.future(arg2: "two")
+            expect { Resque::Plugins::Status::Future.wait(f1, f2, timeout: 2) }.to raise_error(TimeoutError)
+        end
+    end
 
     describe 'Monkeypatch Resque::Plugins::Status' do
         it 'adds a future method to Resque::Plugins::Status' do

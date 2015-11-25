@@ -14,7 +14,7 @@ class SlowExample
     include Resque::Plugins::Status
     def perform
         arg1 = options['arg1']
-        sleep 2
+        sleep 3
         completed example: arg1+arg1, finish_time: Time.now
     end
 end

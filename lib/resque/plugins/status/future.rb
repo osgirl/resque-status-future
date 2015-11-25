@@ -51,6 +51,30 @@ class Resque::Plugins::Status::Future
         end
     end
     
+    def self.wait(*futures)
+        # Pop options off the end if they're provided
+        options = futures.last.kind_of?(Hash) ? futures.pop : {}
+        
+        interval = options[:interval] || 0.2
+        timeout  = options[:timeout]  || 60       
+        returns  = {}
+        Timeout::timeout(timeout) do
+            unfinished = futures
+            loop do
+                unfinished.each do |f|
+                    if retval = f.send(:check_if_finished)
+                        returns[f] = retval
+                    end
+                end
+                unfinished = futures.reject {|f| returns.has_key? f}
+                if unfinished.empty?
+                    return futures.map {|f| returns[f]}
+                end
+                sleep interval
+            end
+        end
+    end
+    
     protected
     
     # Check if this particular future has completed and get the return
