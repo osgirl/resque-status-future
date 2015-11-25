@@ -72,6 +72,13 @@ to the next item in the chain.
 If the callback returns something other than a future, it will break the chain
 and its value is returned by `#wait`.
 
+## timeout and interval
+
+`#wait` takes optional parameters:
+
+* `timeout`: How long to wait before raising a `TimeoutError` in seconds (default: 60).
+* `interval`: How often to query Redis for job status (default: 0.2).
+
 ## status
 
 At any time you can call `future.status` to get back the current status of the
