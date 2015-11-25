@@ -7,10 +7,31 @@ describe Resque::Plugins::Status::Future do
             Resque.redis.ping # check redis is up
             n_workers = Resque.redis.scard('workers')
             if !n_workers || n_workers < 3
-                raise "Workers not running. Try starting them with:\n  COUNT=3 QUEUE=* rake resque:work"
+                raise "Workers not running. Try starting them with:\n  COUNT=3 QUEUE=* rake resque:workers"
             end
         rescue Redis::CannotConnectError
             raise "Can't ping Redis. Try starting one with:\n  docker run -p 6379:6379 -d redis"
+        end
+    end
+    
+    describe '#then' do
+        it 'returns a new future' do
+            f1 = Example.future(arg1: "hello")
+            f2 = f1.then { true }
+            expect(f2).to be_a(Resque::Plugins::Status::Future)
+            expect(f1).not_to be(f2)
+        end
+        it "executes block with parent's return value when waited" do
+            f = Example.future(arg1: "hello").then {|st| "FOUND: #{st['example']}" }
+            expect(f.wait).to eq("FOUND: hellohello")
+        end
+        it 'allows chaining of futures' do
+            f = Example.future(arg1: "hello").then do |st|
+                Example.future(arg1: "#{st['example']} world ")
+            end.then do |st|
+                "Finally: #{st['example']}"
+            end
+            expect(f.wait).to eq("Finally: hellohello world hellohello world ")
         end
     end
 
