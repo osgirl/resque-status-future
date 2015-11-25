@@ -74,7 +74,7 @@ describe Resque::Plugins::Status::Future do
         end
         it 'still has options' do
             f1 = SlowExample.future(arg1: "one")
-            f2 = SlowExample.future(arg2: "two")
+            f2 = SlowExample.future(arg1: "two")
             expect { Resque::Plugins::Status::Future.wait(f1, f2, timeout: 2) }.to raise_error(TimeoutError)
         end
     end

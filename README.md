@@ -99,6 +99,16 @@ s1, s2 = Resque::Plugins::Status::Future.wait(f1, f2, timeout: 10)
 The statuses are returned in the same order as the futures were passed in,
 not the order in which they completed.
 
+## Running the specs
+
+The specs need a Redis container and some Resque workers running before
+they will pass. The easiest way to get these running is using Docker:
+
+```sh
+docker run -p 6379:6379 -d redis
+COUNT=3 QUEUE=* rake resque:workers
+```
+
 ## Authors
 
 Rich Daley, 2015

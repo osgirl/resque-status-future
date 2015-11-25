@@ -23,6 +23,6 @@ class BrokenExample
     @queue = :brokenexample
     include Resque::Plugins::Status
     def perform
-        # don't call completed
+        raise "I'm blowing up"
     end
 end
