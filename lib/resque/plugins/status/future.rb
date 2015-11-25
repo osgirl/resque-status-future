@@ -30,7 +30,7 @@ class Resque::Plugins::Status::Future
     end
 
     # Wait for the operation to complete and return its result as
-    # a Resque::Plugins::Status::Hash. Raises Timeout::Error if it
+    # a Resque::Plugins::Status::Hash. Raises TimeoutError if it
     # reaches the timeout without completing.
     #
     # If this is a future that has been chained with #then, wait for
@@ -51,6 +51,9 @@ class Resque::Plugins::Status::Future
         end
     end
     
+    # Wait for multiple futures at the same time. The status are returned as
+    # an array, in the same order as the futures were passed in. Options are
+    # the same as for #wait.
     def self.wait(*futures)
         # Pop options off the end if they're provided
         options = futures.last.kind_of?(Hash) ? futures.pop : {}
