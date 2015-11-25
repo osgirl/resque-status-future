@@ -1,4 +1,4 @@
-# Resque::Status::Future
+# resque-status-future
 
 This gem adds [futures](https://en.wikipedia.org/wiki/Futures_and_promises) to
 the excellent [resque-status](https://github.com/quirkey/resque-status) gem.
