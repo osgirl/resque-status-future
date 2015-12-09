@@ -1,5 +1,5 @@
 require 'resque-status'
-require 'timeout'
+require 'timeout' # for the exception
 
 class Resque::Plugins::Status::Future
     def initialize(id=nil)
@@ -39,16 +39,7 @@ class Resque::Plugins::Status::Future
     # future, wait for it too.
     #
     def wait(options={})
-        interval = options[:interval] || 0.2
-        timeout  = options[:timeout]  || 60
-        Timeout::timeout(timeout) do
-            loop do
-                retval = check_if_finished
-                return retval if retval                
-                sleep interval
-            end
-
-        end
+        self.class.wait(self, options).first
     end
     
     # Wait for multiple futures at the same time. The status are returned as
@@ -61,20 +52,22 @@ class Resque::Plugins::Status::Future
         interval = options[:interval] || 0.2
         timeout  = options[:timeout]  || 60       
         returns  = {}
-        Timeout::timeout(timeout) do
-            unfinished = futures
-            loop do
-                unfinished.each do |f|
-                    if retval = f.send(:check_if_finished)
-                        returns[f] = retval
-                    end
+        start_time = Time.now
+        unfinished = futures
+        loop do
+            unfinished.each do |f|
+                if retval = f.send(:check_if_finished)
+                    returns[f] = retval
                 end
-                unfinished = futures.reject {|f| returns.has_key? f}
-                if unfinished.empty?
-                    return futures.map {|f| returns[f]}
-                end
-                sleep interval
             end
+            unfinished = futures.reject {|f| returns.has_key? f}
+            if unfinished.empty?
+                return futures.map {|f| returns[f]}
+            end
+            if (Time.now - start_time) > timeout
+                raise Timeout::Error
+            end
+            sleep interval
         end
     end
     
