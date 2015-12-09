@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    resque-status-future (0.2.0)
+    resque-status-future (0.3.0)
       resque-status (~> 0.5)
 
 GEM
