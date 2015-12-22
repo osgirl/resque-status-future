@@ -72,6 +72,20 @@ describe Resque::Plugins::Status::Future do
             expect(ret1['example']).to eq("1oneone1oneone")
             expect(ret2['example']).to eq("2twotwo2twotwo")
         end
+        it 'supports chaining resque futures with non-resque ones' do
+            f1 = Example.future(arg1: "one").then{|st| "HELLO: #{st['example']}"}
+            f2 = Example.future(arg1: "two").then{|st| "HELLO: #{st['example']}"}
+            ret1, ret2 = Resque::Plugins::Status::Future.wait(f1, f2)
+            expect(ret1).to eq("HELLO: oneone")
+            expect(ret2).to eq("HELLO: twotwo")
+        end
+        it 'supports chaining with non-resque futures that return nil' do
+            f1 = Example.future(arg1: "one").then{|st| nil}
+            f2 = Example.future(arg1: "two").then{|st| "HELLO: #{st['example']}"}
+            ret1, ret2 = Resque::Plugins::Status::Future.wait(f1, f2)
+            expect(ret1).to be_nil
+            expect(ret2).to eq("HELLO: twotwo")
+        end
         it 'still has options' do
             f1 = SlowExample.future(arg1: "one")
             f2 = SlowExample.future(arg1: "two")

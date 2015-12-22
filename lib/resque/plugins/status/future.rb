@@ -56,7 +56,8 @@ class Resque::Plugins::Status::Future
         unfinished = futures
         loop do
             unfinished.each do |f|
-                if retval = f.send(:check_if_finished)
+                finished, retval = f.send(:check_if_finished)
+                if finished
                     returns[f] = retval
                 end
             end
@@ -74,13 +75,18 @@ class Resque::Plugins::Status::Future
     protected
     
     # Check if this particular future has completed and get the return
-    # value if it has.
+    # value if it has. Returns two values (finished, value) in case value
+    # is false
     def check_if_finished
         if parent
             return parent_check
         else
             st = status
-            return st.completed? ? st : nil
+            if st.completed?
+                return [true, st]
+            else
+                return [false, nil]
+            end
         end
     end
         
@@ -89,7 +95,7 @@ class Resque::Plugins::Status::Future
     def parent_check
         # If the parent has a parent, check that
         if parent.parent
-            st = parent.parent_check
+            _, st = parent.parent_check
         else
             st = parent.status
         end
@@ -104,10 +110,10 @@ class Resque::Plugins::Status::Future
             # If it's something else, we've reached the bottom of the chain -
             # return it
             else
-                return retval
+                return [true, retval]
             end
         end
-        return nil
+        return [false, nil]
     end
     
 end
