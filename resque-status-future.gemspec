@@ -5,8 +5,8 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 Gem::Specification.new do |spec|
   spec.name          = "resque-status-future"
   spec.version       = "0.4.0"
-  spec.authors       = ["Rich Daley"]
-  spec.email         = ["rich@fishpercolator.co.uk"]
+  spec.authors       = ["Rich Daley", "David Collom"]
+  spec.email         = ["david.collom@williamhill.com"]
 
   spec.summary       = %q{Adds support for futures to resque-status}
   spec.homepage      = "https://github.com/fishpercolator/resque-status-future"
