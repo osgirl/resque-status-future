@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["david.collom@williamhill.com"]
 
   spec.summary       = %q{Adds support for futures to resque-status}
-  spec.homepage      = "https://github.com/fishpercolator/resque-status-future"
+  spec.homepage      = "https://github.com/William-Hill-Online/resque-status-future"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
