@@ -4,12 +4,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "resque-status-future"
-  spec.version       = "0.4.0"
+  spec.version       = "0.5.0"
   spec.authors       = ["Rich Daley", "David Collom"]
   spec.email         = ["david.collom@williamhill.com"]
 
   spec.summary       = %q{Adds support for futures to resque-status}
-  spec.homepage      = "https://github.com/fishpercolator/resque-status-future"
+  spec.homepage      = "https://github.com/William-Hill-Online/resque-status-future"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
