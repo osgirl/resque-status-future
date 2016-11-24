@@ -9,6 +9,8 @@ GEM
   specs:
     coderay (1.1.1)
     diff-lcs (1.2.5)
+    docile (1.1.5)
+    json (2.0.2)
     method_source (0.8.2)
     mono_logger (1.1.0)
     multi_json (1.12.1)
@@ -44,6 +46,11 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.5.0)
     rspec-support (3.5.0)
+    simplecov (0.12.0)
+      docile (~> 1.1.0)
+      json (>= 1.8, < 3)
+      simplecov-html (~> 0.10.0)
+    simplecov-html (0.10.0)
     sinatra (1.4.7)
       rack (~> 1.5)
       rack-protection (~> 1.4)
@@ -62,6 +69,7 @@ DEPENDENCIES
   rake (~> 10.0)
   resque-status-future!
   rspec
+  simplecov
 
 BUNDLED WITH
    1.12.5
