@@ -76,6 +76,8 @@ protected
     return parent_check if parent
 
     st = status
+    raise st['message'] if st.failed?
+
     return [true, st] if st.completed?
 
     [false, nil]
@@ -90,19 +92,18 @@ protected
     else
       st = parent.status
     end
+
+    raise st['message'] if st && st.failed?
+
     if st && st.completed?
       # Execute the callback
       retval = callback.call(st)
       self.parent   = nil
       self.callback = nil
-      # If the retval is a future, set our id and continue
-      if retval.is_a? Resque::Plugins::Status::Future
-        self.id = retval.id
-      # If it's something else, we've reached the bottom of the chain -
-      # return it
-      else
-        return [true, retval]
-      end
+      # If the retval is not a future, we've reached the bottom of the chain - return it
+      return [true, retval] unless retval.is_a? Resque::Plugins::Status::Future
+      # If the retval is not a future, set our id and continue
+      self.id = retval.id
     end
     [false, nil]
   end
