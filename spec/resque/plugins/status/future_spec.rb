@@ -28,7 +28,8 @@ describe Resque::Plugins::Status::Future do
     it 'allows chaining of futures' do
       f = Example.future(arg1: 'hello').then do |st|
         Example.future(arg1: "#{st['example']} world ")
-      end.then do |st|
+      end
+      f.then do |st|
         "Finally: #{st['example']}"
       end
       expect(f.wait).to eq('Finally: hellohello world hellohello world ')
