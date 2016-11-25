@@ -26,13 +26,13 @@ describe Resque::Plugins::Status::Future do
       expect(f.wait).to eq('FOUND: hellohello')
     end
     it 'allows chaining of futures' do
-      f = Example.future(arg1: 'hello').then do |st|
+      f1 = Example.future(arg1: 'hello').then do |st|
         Example.future(arg1: "#{st['example']} world ")
       end
-      f.then do |st|
+      f2 = f1.then do |st|
         "Finally: #{st['example']}"
       end
-      expect(f.wait).to eq('Finally: hellohello world hellohello world ')
+      expect(f2.wait).to eq('Finally: hellohello world hellohello world ')
     end
   end
 

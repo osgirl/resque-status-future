@@ -106,7 +106,7 @@ they will pass. The easiest way to get these running is using Docker:
 
 ```sh
 docker run -p 6379:6379 -d redis
-COUNT=3 QUEUE=* rake resque:workers
+VERBOSE=1 REDIS_URL=redis://$(docker-machine ip):6379 COUNT=3 QUEUE=* rake resque:workers
 ```
 
 ## Authors
