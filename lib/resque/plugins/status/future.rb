@@ -100,9 +100,9 @@ protected
       retval = callback.call(st)
       self.parent   = nil
       self.callback = nil
-      # If the retval is not a future, we've reached the bottom of the chain - return it
+      # If the retval is NOT a future, we've reached the bottom of the chain - return it
       return [true, retval] unless retval.is_a? Resque::Plugins::Status::Future
-      # If the retval is not a future, set our id and continue
+      # If the retval is a future, set our id and continue
       self.id = retval.id
     end
     [false, nil]
