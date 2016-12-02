@@ -56,13 +56,32 @@ class Resque::Plugins::Status::Future
     start_time = Time.now
     unfinished = futures
     loop do
+      jobs_in_process = false
       unfinished.each do |f|
-        finished, retval = f.send(:check_if_finished)
+        finished, queued, retval = f.send(:check_if_finished)
+        p [finished, queued, f.send(:status)]
         returns[f] = retval if finished
+        if !finished && !queued
+          jobs_in_process = true
+        end
       end
+      # p "jobs_in_process - #{jobs_in_process}"
       unfinished = futures.reject {|f| returns.key? f}
       return futures.map {|f| returns[f]} if unfinished.empty?
-      raise Timeout::Error if (Time.now - start_time) > timeout
+      # p unfinished.map{|f| f.send(:status)}
+      if (Time.now - start_time) > timeout
+        # don't raise Timeout if any jobs is in process
+        if !jobs_in_process
+          # require 'pry'
+          # binding.pry
+          unfinished.each{|f| Resque::Plugins::Status::Hash.kill(f.id)}
+          # p unfinished.map{|f| f.send(:status)}
+          # p '--'
+          # p Resque::Plugins::Status::Hash.statuses
+          p Resque::Plugins::Status::Hash.kill_ids
+          raise Timeout::Error
+        end
+      end
       sleep interval
     end
   end
@@ -78,9 +97,10 @@ protected
     st = status
     raise st['message'] if st.failed?
 
-    return [true, st] if st.completed?
+    queued = st.queued?
+    return [true, queued, st] if st.completed?
 
-    [false, nil]
+    [false, queued, nil]
   end
 
   # Check if the parent has completed. If it has, execute the callback and
@@ -101,11 +121,11 @@ protected
       self.parent   = nil
       self.callback = nil
       # If the retval is NOT a future, we've reached the bottom of the chain - return it
-      return [true, retval] unless retval.is_a? Resque::Plugins::Status::Future
+      return [true, false, retval] unless retval.is_a? Resque::Plugins::Status::Future
       # If the retval is a future, set our id and continue
       self.id = retval.id
     end
-    [false, nil]
+    [false, false, nil]
   end
 
 end
