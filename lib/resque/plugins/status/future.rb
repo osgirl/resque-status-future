@@ -51,7 +51,7 @@ class Resque::Plugins::Status::Future
     options = futures.last.is_a?(Hash) ? futures.pop : {}
 
     interval = options[:interval] || 0.2
-    timeout  = options[:timeout]  || 60
+    timeout  = options[:timeout]  || 10
     returns  = {}
     start_time = Time.now
     unfinished = futures
