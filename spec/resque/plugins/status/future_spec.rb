@@ -22,7 +22,7 @@ describe Resque::Plugins::Status::Future do
 
   after :each do
     unless Resque.info[:working] == 0
-      # p Resque.info, Resque::Plugins::Status::Hash.statuses.reject{|s| s['status'] =~ /(completed|failed)/ }
+      # p Resque.info, Resque::Plugins::Status::Hash.statuses.reject{|s| s['status'] =~ /(completed|failed)/ }
       raise 'Resque has unfinished jobs'
     end
   end
