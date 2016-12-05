@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Resque::Plugins::Status::Future do
-  before(:all) do
+  before :all do
     # Sanity check environment
     begin
       Resque.redis.ping # check redis is up
@@ -11,6 +11,19 @@ describe Resque::Plugins::Status::Future do
       end
     rescue Redis::CannotConnectError
       raise "Can't ping Redis. Try starting one with:\n  docker run -p 6379:6379 -d redis"
+    end
+  end
+
+  before :each do
+    Resque.workers.each do |w|
+      raise 'Resque worker are busy' if w.working?
+    end
+  end
+
+  after :each do
+    unless Resque.info[:working] == 0
+      # p Resque.info, Resque::Plugins::Status::Hash.statuses.reject{|s| s['status'] =~ /(completed|failed)/ }
+      raise 'Resque has unfinished jobs'
     end
   end
 
@@ -93,10 +106,26 @@ describe Resque::Plugins::Status::Future do
       expect(ret1).to be_nil
       expect(ret2).to eq('HELLO: twotwo')
     end
-    it 'still has options' do
+    it "doesn't raise timeout if task is in process" do
+      f = SlowExample.future(arg1: 'one')
+      Resque::Plugins::Status::Future.wait(f, timeout: 2)
+    end
+    it "doesn't raise timeout if several tasks is in process" do
       f1 = SlowExample.future(arg1: 'one')
       f2 = SlowExample.future(arg1: 'two')
-      expect { Resque::Plugins::Status::Future.wait(f1, f2, timeout: 2) }.to raise_error(TimeoutError)
+      Resque::Plugins::Status::Future.wait(f1, f2, timeout: 2)
+    end
+    it 'raise timeout if a single task is not taken within timeout' do
+      f1 = NonTakenExample.future(arg1: 'one')
+      expect(Resque::Plugins::Status::Hash).to receive(:kill).with(f1.id)
+      expect { Resque::Plugins::Status::Future.wait(f1, timeout: 1) }.to raise_error(TimeoutError)
+    end
+    it 'raise timeout if one of tasks is not taken within timeout' do
+      f1 = NonTakenExample.future(arg1: 'one')
+      f2 = SlowExample.future(arg1: 'two')
+      expect(Resque::Plugins::Status::Hash).to receive(:kill).with(f1.id)
+      expect(Resque::Plugins::Status::Hash).not_to receive(:kill).with(f2.id)
+      expect { Resque::Plugins::Status::Future.wait(f1, f2, timeout: 4) }.to raise_error(TimeoutError)
     end
   end
 

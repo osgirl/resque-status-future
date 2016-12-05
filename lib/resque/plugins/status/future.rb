@@ -59,26 +59,16 @@ class Resque::Plugins::Status::Future
       jobs_in_process = false
       unfinished.each do |f|
         finished, queued, retval = f.send(:check_if_finished)
-        p [finished, queued, f.send(:status)]
+        # p [f.id, finished, queued, retval]
         returns[f] = retval if finished
-        if !finished && !queued
-          jobs_in_process = true
-        end
+        jobs_in_process = true if !finished && !queued
       end
-      # p "jobs_in_process - #{jobs_in_process}"
       unfinished = futures.reject {|f| returns.key? f}
       return futures.map {|f| returns[f]} if unfinished.empty?
-      # p unfinished.map{|f| f.send(:status)}
       if (Time.now - start_time) > timeout
         # don't raise Timeout if any jobs is in process
-        if !jobs_in_process
-          # require 'pry'
-          # binding.pry
-          unfinished.each{|f| Resque::Plugins::Status::Hash.kill(f.id)}
-          # p unfinished.map{|f| f.send(:status)}
-          # p '--'
-          # p Resque::Plugins::Status::Hash.statuses
-          p Resque::Plugins::Status::Hash.kill_ids
+        unless jobs_in_process
+          unfinished.each {|f| Resque::Plugins::Status::Hash.kill(f.id)}
           raise Timeout::Error
         end
       end
@@ -108,7 +98,7 @@ protected
   def parent_check
     # If the parent has a parent, check that
     if parent.parent
-      _, st = parent.parent_check
+      _, _, st = parent.parent_check
     else
       st = parent.status
     end
