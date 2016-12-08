@@ -65,7 +65,7 @@ class Resque::Plugins::Status::Future
       end
       unfinished = futures.reject {|f| returns.key? f}
       return futures.map {|f| returns[f]} if unfinished.empty?
-      if (Time.now - start_time) > timeout
+      if timeout > 0 && (Time.now - start_time) > timeout
         # don't raise Timeout if any jobs is in process
         unless jobs_in_process
           unfinished.each {|f| Resque::Plugins::Status::Hash.kill(f.id)}
