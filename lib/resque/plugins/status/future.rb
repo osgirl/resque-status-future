@@ -51,18 +51,27 @@ class Resque::Plugins::Status::Future
     options = futures.last.is_a?(Hash) ? futures.pop : {}
 
     interval = options[:interval] || 0.2
-    timeout  = options[:timeout]  || 60
+    timeout  = options[:timeout]  || 10
     returns  = {}
     start_time = Time.now
     unfinished = futures
     loop do
+      jobs_in_process = false
       unfinished.each do |f|
-        finished, retval = f.send(:check_if_finished)
+        finished, queued, retval = f.send(:check_if_finished)
+        # p [f.id, finished, queued, retval]
         returns[f] = retval if finished
+        jobs_in_process = true if !finished && !queued
       end
       unfinished = futures.reject {|f| returns.key? f}
       return futures.map {|f| returns[f]} if unfinished.empty?
-      raise Timeout::Error if (Time.now - start_time) > timeout
+      if timeout > 0 && (Time.now - start_time) > timeout
+        # don't raise Timeout if any jobs is in process
+        unless jobs_in_process
+          unfinished.each {|f| Resque::Plugins::Status::Hash.kill(f.id)}
+          raise Timeout::Error
+        end
+      end
       sleep interval
     end
   end
@@ -78,9 +87,10 @@ protected
     st = status
     raise st['message'] if st.failed?
 
-    return [true, st] if st.completed?
+    queued = st.queued?
+    return [true, queued, st] if st.completed?
 
-    [false, nil]
+    [false, queued, nil]
   end
 
   # Check if the parent has completed. If it has, execute the callback and
@@ -88,7 +98,7 @@ protected
   def parent_check
     # If the parent has a parent, check that
     if parent.parent
-      _, st = parent.parent_check
+      _, _, st = parent.parent_check
     else
       st = parent.status
     end
@@ -101,11 +111,11 @@ protected
       self.parent   = nil
       self.callback = nil
       # If the retval is NOT a future, we've reached the bottom of the chain - return it
-      return [true, retval] unless retval.is_a? Resque::Plugins::Status::Future
+      return [true, false, retval] unless retval.is_a? Resque::Plugins::Status::Future
       # If the retval is a future, set our id and continue
       self.id = retval.id
     end
-    [false, nil]
+    [false, false, nil]
   end
 
 end
