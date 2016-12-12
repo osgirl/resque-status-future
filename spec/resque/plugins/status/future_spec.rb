@@ -16,7 +16,7 @@ describe Resque::Plugins::Status::Future do
 
   before :each do
     Resque.workers.each do |w|
-      raise 'Resque worker are busy' if w.working?
+      raise 'Resque worker is busy' if w.working?
     end
   end
 
