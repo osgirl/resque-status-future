@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = 'resque-status-future'
-  spec.version       = '0.6.0'
+  spec.version       = '0.7.0'
   spec.authors       = ['Rich Daley']
   spec.email         = ['rich@fishpercolator.co.uk']
 
