@@ -85,7 +85,7 @@ protected
     return parent_check if parent
 
     st = status
-    raise st['message'] if st.failed?
+    raise error_message(st) if st.failed?
 
     queued = st.queued?
     return [true, queued, st] if st.completed?
@@ -103,7 +103,7 @@ protected
       st = parent.status
     end
 
-    raise st['message'] if st && st.failed?
+    raise error_message(st) if st && st.failed?
 
     if st && st.completed?
       # Execute the callback
@@ -116,6 +116,10 @@ protected
       self.id = retval.id
     end
     [false, false, nil]
+  end
+
+  def error_message(st)
+    st['message'] || st['error'] || 'No message provided'
   end
 
 end
