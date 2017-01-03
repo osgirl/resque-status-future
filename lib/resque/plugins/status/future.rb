@@ -59,7 +59,6 @@ class Resque::Plugins::Status::Future
       jobs_in_process = false
       unfinished.each do |f|
         finished, queued, retval = f.send(:check_if_finished)
-        # p [f.id, finished, queued, retval]
         returns[f] = retval if finished
         jobs_in_process = true if !finished && !queued
       end
