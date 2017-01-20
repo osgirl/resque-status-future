@@ -58,7 +58,7 @@ future = CreateContainer.future('image_name' => 'redis').then do |st|
     StartContainer.future('container_name' => st['container_name'])
 end
 
-status = future.wait(timeout: 10)
+status = future.wait(timeout: 5)
 ```
 
 The callback given to `#then` can be any Ruby code and it receives the
@@ -76,7 +76,7 @@ and its value is returned by `#wait`.
 
 `#wait` takes optional parameters:
 
-* `timeout`: How long to wait before raising a `TimeoutError` in seconds (default: 60).
+* `timeout`: How long to wait for task to be taken before raising a `TimeoutError` in seconds (default: 10).
 * `interval`: How often to query Redis for job status (default: 0.2).
 
 ## status
@@ -93,7 +93,7 @@ the module-level `.wait`:
 ```ruby
 f1 = CreateContainer.future('image_name' => 'redis')
 f2 = CreateContainer.future('image_name' => 'ruby')
-s1, s2 = Resque::Plugins::Status::Future.wait(f1, f2, timeout: 10)
+s1, s2 = Resque::Plugins::Status::Future.wait(f1, f2, timeout: 5)
 ```
 
 The statuses are returned in the same order as the futures were passed in,
@@ -106,7 +106,7 @@ they will pass. The easiest way to get these running is using Docker:
 
 ```sh
 docker run -p 6379:6379 -d redis
-VERBOSE=1 REDIS_URL=redis://$(docker-machine ip):6379 COUNT=3 QUEUE=example,slowexample,brokenexample bundle exec rake resque:workers
+VERBOSE=1 REDIS_URL=redis://$(docker-machine ip):6379 COUNT=3 INTERVAL=0.1 QUEUE=example,slowexample,brokenexample bundle exec rake resque:workers
 REDIS_URL=redis://$(docker-machine ip):6379 bundle exec rspec
 ```
 
